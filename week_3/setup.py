@@ -36,7 +36,7 @@ setup(
     name=package_name,
     version='0.0.0',
     packages=find_packages(exclude=['test']),
-    data_files=package_files(data_files, ['config/', 'launch/']),
+    data_files=package_files(data_files, ['config/', 'launch/', 'models/']),
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='ubuntu',
@@ -50,7 +50,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'moveit_py = week_3.moveit_py:main'
+            'moveit_py = week_3.moveit_py:main',
+            'planar_fk_euler = week_3.planar_fk_euler:main'
         ],
     },
 )

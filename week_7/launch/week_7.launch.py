@@ -67,7 +67,7 @@ def group_action(context : LaunchContext):
     with open(robot_sdf, 'w') as f:
         tree.write(f, encoding='unicode')
 
-    yaml_path = os.path.join(get_package_share_directory('week_6'), 'config', 'initial_poses.yaml')
+    yaml_path = os.path.join(get_package_share_directory('week_7'), 'config', 'initial_poses.yaml')
 
     with open(yaml_path, 'r') as f:
         configuration = yaml.safe_load(f)
@@ -105,7 +105,10 @@ def group_action(context : LaunchContext):
                 PythonLaunchDescriptionSource(PathJoinSubstitution([
                     assessment_launch_dir,
                     'spawn_robot.launch.py'])),
-                launch_arguments={'x_pose': TextSubstitution(text=str(init_pose['x'])),
+                launch_arguments={'use_nav2': context.launch_configurations['use_nav2'],
+                                  'map': context.launch_configurations['map'],
+                                  'params_file': context.launch_configurations['params_file'],
+                                  'x_pose': TextSubstitution(text=str(init_pose['x'])),
                                   'y_pose': TextSubstitution(text=str(init_pose['y'])),
                                   'yaw': TextSubstitution(text=str(init_pose['yaw'])),
                                   'robot_sdf': robot_sdf}.items()),
@@ -118,16 +121,6 @@ def group_action(context : LaunchContext):
                              'publish_image_zones': False, 
                              'skip_similar_frames': False, 
                              'publish_image_zones_mask': False}]),
-
-            Node(
-                package='week_6',
-                executable='path_publisher',
-                output='screen',
-                parameters=[{'x_pose': TextSubstitution(text=str(init_pose['x'])),
-                             'y_pose': TextSubstitution(text=str(init_pose['y'])),
-                             'yaw': TextSubstitution(text=str(init_pose['yaw'])),
-                             'odometry_source': odometry_source}]
-            )
         ])
     
         bringup_cmd_group.append(group)
@@ -151,6 +144,11 @@ def generate_launch_description():
     odometry_source = LaunchConfiguration('odometry_source')
     encoder_bias_left = LaunchConfiguration('encoder_bias_left')
     encoder_bias_right = LaunchConfiguration('encoder_bias_right')
+
+    # Nav2
+    use_nav2 = LaunchConfiguration('use_nav2')
+    map_yaml_file = LaunchConfiguration('map')
+    params_file = LaunchConfiguration('params_file')
 
     # Odom bias left, right
     declare_odometry_source_cmd = DeclareLaunchArgument(
@@ -248,6 +246,21 @@ def generate_launch_description():
         parameters=[{'random_seed' : random_seed}]
     )
 
+    declare_use_nav2_cmd = DeclareLaunchArgument(
+        'use_nav2',
+        default_value='False',
+        description='Whether to use the navigation stack (Nav2)')
+
+    declare_map_yaml_cmd = DeclareLaunchArgument(
+        'map',
+        default_value="",
+        description='Full path to map file to load')
+
+    declare_params_file_cmd = DeclareLaunchArgument(
+        'params_file',
+        default_value=os.path.join(get_package_share_directory('week_7'), 'params', 'nav2_params_namespaced.yaml'),
+        description='Full path to the ROS2 parameters file to use for all launched nodes')
+
     bringup_cmd_group = OpaqueFunction(function=group_action)
         
     ld = LaunchDescription()
@@ -268,6 +281,9 @@ def generate_launch_description():
     ld.add_action(declare_headless_cmd)
     ld.add_action(declare_limit_real_time_factor_cmd)
     ld.add_action(declare_wait_for_barrels_cmd)
+    ld.add_action(declare_use_nav2_cmd)
+    ld.add_action(declare_map_yaml_cmd)
+    ld.add_action(declare_params_file_cmd)
 
     # Add the commands to the launch description
     ld.add_action(env_gazebo_model_path)

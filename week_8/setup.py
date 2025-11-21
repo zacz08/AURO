@@ -51,6 +51,7 @@ setup(
             'robot_controller = week_8.robot_controller:main',
             'autonomous_navigation = week_8.autonomous_navigation:main',
             'autonomous_navigation_multithreaded = week_8.autonomous_navigation_multithreaded:main',
+            'set_init_pose = week_8.set_init_pose:main'
         ],
     },
 )
